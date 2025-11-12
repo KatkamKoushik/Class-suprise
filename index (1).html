@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initializing...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base setup */
+        body {
+            background-color: #000;
+            color: #0F0; /* Green text */
+            font-family: 'Roboto Mono', monospace;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* No scrollbars */
+            cursor: none; /* Hide the mouse */
+        }
+
+        /* The "Matrix" rain effect */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: none; /* Hidden by default */
+        }
+
+        /* The main terminal content */
+        #terminal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 2; /* In front of the rain */
+            display: none; /* Hidden by default */
+            font-size: 1.1em;
+            line-height: 1.5;
+            white-space: pre-wrap; /* Preserve line breaks */
+            overflow-y: auto; /* Allow scrolling if it gets too long */
+        }
+        
+        /* --- Phase 1: The Warning Box --- */
+        #warning-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 500px;
+            background: #111;
+            border: 2px solid #F00; /* Red border */
+            box-shadow: 0 0 20px #F00; /* Red glow */
+            color: #F00;
+            padding: 20px;
+            z-index: 3; /* On top of everything */
+            text-align: center;
+            font-weight: 700;
+            display: none; /* Hidden by default */
+            animation: pulse 1s infinite;
+        }
+        #warning-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        #warning-text {
+            font-size: 1em;
+            color: #FFF;
+            margin-bottom: 20px;
+        }
+        /* Fake progress bar */
+        #progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border: 1px solid #F00;
+        }
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #F00;
+            transition: width 0.1s linear;
+        }
+        /* Flashing animation */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px #F00; }
+            50% { box-shadow: 0 0 30px #F00; }
+            100% { box-shadow: 0 0 10px #F00; }
+        }
+
+        /* --- Phase 3: The Reveal --- */
+        
+        /* Main branch highlight */
+        .branch-highlight {
+            color: #FFF;
+            font-weight: 700;
+            font-size: 1.3em;
+            background-color: #0F0;
+            color: #000;
+            padding: 2px 8px;
+        }
+        
+        /* Name highlights */
+        .cr-highlight {
+            color: #0FF; /* Cyan */
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        .creator-highlight {
+            color: #FF0; /* Yellow */
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        /* The final "pwned" message */
+        .final-message {
+            color: #F00; /* Red */
+            font-weight: 700;
+            font-size: 1.5em;
+        }
+        .final-credit {
+            color: #FFF;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <div id="warning-box">
+        <div id="warning-title">-- SYSTEM VULNERABILITY DETECTED --</div>
+        <div id="warning-text">Initiating kernel-level access...<br>Bypassing `local_firewall`...</div>
+        <div id="progress-bar-container">
+            <div>INJECTING PAYLOAD...</div>
+            <div id="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="terminal"></div>
+
+    <script>
+        // --- 1. ALL YOUR DATA IS HERE ---
+        
+        const BRANCH_NAME = "DATA SCIENCE";
+        const CR_NAME = "POODARI ABHIRAM";
+        const YOUR_NAME = "KATKAM KOUSHIK";
+
+        const CLASS_NAMES = [
+            'AKKAPAKA AKASH',
+            'ALLA UDAY SHANKAR REDDY',
+            'ANUMULA NIKHIL REDDY',
+            'BANOTH ARUN KUMAR',
+            'BHUKYA MOHAN PRASAD',
+            'CHELAMALLA SANDEEP',
+            'DEVARAKONDA SIDDHARDHA',
+            'GILAKATHULA GANESH',
+            'GUNTI YAGNA LINGESWAR RAO',
+            'JATOTHU YAKESH',
+            'JOGA MOKSHAGNA',
+            'KATTEKOLA ABHINAV',
+            'KETHAVATH NIKHITHA',
+            'KUSUMA VARUN',
+            'LINGAMPALLY HARI KRISHNA',
+            'MADAKA HARSHITH',
+            'MAILARISHETTY VISHNU VARDHAN',
+            'MEDAGONI BHARATH',
+            'MOHAMMED SAMEER',
+            'MOLLETI RAVI SAI TEJA',
+            'MUDAVATH YOGI',
+            'NUTHILAKANTI PANVI',
+            'PENUKULA ABHISHEK',
+            'POLURI MANI SANKAR',
+            'POTHULA SHYAM DINESH',
+            'PV KARTHIK',
+            'RATHOD SAINIKETHAN',
+            'SABBANI PAVAN KUMAR',
+            'SHAIKHNA MOHAMMED UMAIR HAZRAMI',
+            'TAGARAM ASHISH',
+            'VAJJA DEVI SRI CHAITHANYA DORA',
+            'GATTIGORLA NARESH',
+            'KESABOINA SATHWIK',
+            'MOHAMMAD ASHWAQ'
+            // Total 34 names
+        ];
+        
+        // --- 2. THE SIMULATION SCRIPT ---
+        // (You don't need to edit below this line)
+
+        const terminal = document.getElementById('terminal');
+        const warningBox = document.getElementById('warning-box');
+        const progressBar = document.getElementById('progress-fill');
+        const warningTitle = document.getElementById('warning-title');
+        const warningText = document.getElementById('warning-text');
+        const progressBarContainer = document.getElementById('progress-bar-container');
+
+        // Utility function for delays
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Function to type text onto the terminal
+        async function typeText(text, speed = 50) {
+            for (let i = 0; i < text.length; i++) {
+                terminal.innerHTML += text[i];
+                terminal.scrollTop = terminal.scrollHeight; // Auto-scroll
+                await sleep(speed);
+            }
+            terminal.innerHTML += '\n';
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        // Function to type text with HTML tags
+        async function typeHtml(html, speed = 50) {
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            let nodes = Array.from(tempDiv.childNodes);
+            
+            for (let node of nodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    await typeText(node.textContent, speed);
+                } else {
+                    // It's an HTML element. Add it all at once.
+                    terminal.innerHTML += node.outerHTML + '\n';
+                    terminal.scrollTop = terminal.scrollHeight;
+                    await sleep(speed); // Still pause
+                }
+            }
+        }
+
+        // --- Matrix Rain Code ---
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()-+<>{}[]';
+        const charsArray = matrixChars.split('');
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        let drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+        let matrixInterval;
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                let text = charsArray[Math.floor(Math.random() * charsArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        function startMatrix() {
+            canvas.style.display = 'block';
+            matrixInterval = setInterval(drawMatrix, 33);
+        }
+        function stopMatrix() {
+            clearInterval(matrixInterval);
+            // Fade out the canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            let fadeOut = setInterval(() => {
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }, 50);
+            setTimeout(() => {
+                clearInterval(fadeOut);
+                canvas.style.display = 'none';
+            }, 1000);
+        }
+
+        // --- Main "Attack" Sequence ---
+        async function startAttack() {
+            await sleep(1000); // Start after 1s
+
+            // --- PHASE 1: The Attack ---
+            startMatrix();
+            warningBox.style.display = 'block';
+
+            // Fill progress bar
+            let progress = 0;
+            let progressInterval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress > 100) progress = 100;
+                progressBar.style.width = progress + '%';
+                if (progress === 100) {
+                    clearInterval(progressInterval);
+                }
+            }, 100);
+
+            await sleep(4000); // Let the "hack" run for 4 seconds
+
+            // --- Breach Confirmed ---
+            warningTitle.textContent = 'SYSTEM BREACHED.';
+            warningText.textContent = '`ROOT ACCESS GRANTED.`';
+            progressBarContainer.style.display = 'none';
+
+            await sleep(2000); // Let them read the "breached" message
+
+            // --- PHASE 2: The Decryption ---
+            warningBox.style.display = 'none'; // Hide warning box
+            stopMatrix(); // Stop the rain
+            terminal.style.display = 'block'; // Show the terminal
+            
+            await sleep(1500); // Black screen pause
+            
+            await typeText('> Running \'identify_assets.sh\'...', 70);
+            await sleep(1000);
+            await typeHtml(`> Target Group Acquired: <span class="branch-highlight">${BRANCH_NAME} ELITES</span>`, 80);
+            await sleep(2000);
+            await typeText('> Decrypting asset list...', 40);
+            await sleep(1000);
+
+            // --- PHASE 3: The Reveal ---
+            let decryptSound = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlMYAQAAFExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVAdding/f/2sQAwCCAIFAQIDAwUEBQUFBQUHBwYFBQUFBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwf/wAARCAAYABQDASIAAhEBAxEB/8QAtwABAQEBAAAAAAAAAAAAAAAAAAUHBAgJAQEAAAAAAAAAAAAAAAAAAAABEQABAgQDBgcAAAAAAAAAAAACAQMEBQYABxITIRQiMDEyQVFxsSIzFBYRYXGBQnL/EQEBAAAAAAAAAAAAAAAAAAAAAR/9gAMAwEAAhEDEQA/ANrAGyvTz/i+A7i/m/eXWuR7dM1R1yNfpmpAARJHO8n2m5q/P9qS+P6e2H9RzY+t9SDoHUMAAAH//2gAMAwEAAgADAAAAEPPPPPP/xAAYEQEBAQEBAAAAAAAAAAAAAAABESEAMv/aAAgBAwEBPxDSyx5b4v/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8AU//EABwQAQADAAIDAAAAAAAAAAAAAAEAESExEEFRcf/aAAgBAQABPxC0Lq427y7GfE9RPrRjGEYxhGMIx6iAQQA/9k="); // A short "blip" sound
+            
+            for (const name of CLASS_NAMES) {
+                decryptSound.cloneNode().play(); // Play sound for each name
+                await typeText(`DECRYPTING... [${name}]`, 20); // Type very fast
+            }
+            
+            await sleep(500);
+            
+            // CR Highlight
+            decryptSound.cloneNode().play();
+            await typeHtml(`DECRYPTING... <span class="cr-highlight">[CR: ${CR_NAME}]</span>`, 50);
+            
+            // Your Highlight
+            decryptSound.cloneNode().play();
+            await typeHtml(`DECRYPTING... <span class="creator-highlight">[ARCHITECT: ${YOUR_NAME}]</span>`, 50);
+
+            await sleep(1500);
+
+            // Final Message
+            await typeHtml(`<span class="final-message">> You've all been pwned.</span>`, 100);
+            await sleep(1000);
+            await typeHtml(`<span class="final-credit">> ...by ${YOUR_NAME}.</span>`, 70);
+            
+            // Hide cursor
+            document.body.style.cursor = 'default';
+        }
+
+        // --- Start the whole show ---
+        startAttack();
+
+    </script>
+</body>
+</html>
